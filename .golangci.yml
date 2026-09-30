@@ -1,0 +1,35 @@
+version: "2"
+
+run:
+  # Default timeout is 1m, which can be too short for larger codebases
+  timeout: 5m
+  # Exit code when issues are found
+  issues-exit-code: 1
+  # Include test files in the linting process
+  tests: true
+
+linters:
+  enable:
+    - errcheck # Finds unchecked errors
+    - govet # Reports suspicious constructs
+    - ineffassign # Detects when assignments to existing variables are not used
+    - staticcheck # Drop-in replacement for go vet with more checks
+
+    # Highly Recommended Best Practices
+    - bodyclose # Ensures HTTP response bodies are closed successfully
+    - goconst # Finds repeated strings that should be constants
+    - gocritic # Comprehensive linter containing many rules
+    - gocyclo # Enforces maximum function complexity
+    - gosec # Inspects source code for security problems
+    - noctx # Finds HTTP requests made without context.Context
+    - prealloc # Suggests preallocating slice capacities when length is known
+    - revive # Modern, faster drop-in replacement for golint
+    - unparam # Reports unused function parameters
+
+issues:
+  max-issues-per-linter: 50
+  max-same-issues: 3
+  new: false
+  fix: false
+  uniq-by-line: true
+  whole-files: false
