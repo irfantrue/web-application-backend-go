@@ -1,3 +1,4 @@
+// Package response provides standard HTTP response formats, including success envelopes and RFC 7807 problem details.
 package response
 
 import (
@@ -7,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
+// ContentType is the default media type for JSON responses.
 const ContentType = "application/json"
 
 // Response is the standard API response envelope for all successful responses.
@@ -29,6 +31,7 @@ type Problem struct {
 	InvalidParams []InvalidParam `json:"invalid_params,omitempty"`
 }
 
+// Error implements the error interface for the Problem struct.
 func (p *Problem) Error() string {
 	return fmt.Sprintf("[%d] %s — %s", p.Status, p.Title, p.Detail)
 }
@@ -44,30 +47,21 @@ func From(err error) (*Problem, bool) {
 	return errors.AsType[*Problem](err)
 }
 
-// writeJSON is an internal helper that writes a JSON response with the given status code.
-//
-// Returns:
-//   - error: nil on success, or a wrapped error if JSON encoding/writing fails
+// WriteJSON is an internal helper that writes a JSON response with the given status code.
 func WriteJSON(c fiber.Ctx, status int, body any) error {
 	c.Set(fiber.HeaderContentType, ContentType)
 	if err := c.Status(status).JSON(body); err != nil {
-		return fmt.Errorf("Failed to write JSON response")
+		return fmt.Errorf("failed to write JSON response")
 	}
 	return nil
 }
 
-// writeProblem sends a Problem (RFC 7807) response to the client.
-//
-// Returns:
-//   - error: Result of c.JSON() operation (typically nil on success)
+// WriteProblem sends a Problem (RFC 7807) response to the client.
 func WriteProblem(c fiber.Ctx, p *Problem) error {
 	return WriteJSON(c, p.Status, p)
 }
 
 // Write sends a standard API response to the client.
-//
-// Returns:
-//   - error: Result of c.JSON() operation (typically nil on success)
 func Write[T any](c fiber.Ctx, r *Response[T]) error {
 	c.Set(fiber.HeaderContentType, ContentType)
 	res := *r

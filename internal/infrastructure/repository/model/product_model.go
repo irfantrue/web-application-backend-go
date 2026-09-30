@@ -1,3 +1,4 @@
+// Package model provides GORM database models and mapper functions to convert between domain entities and database records.
 package model
 
 import (
@@ -8,6 +9,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// ProductModel represents the database table schema for products in GORM.
 type ProductModel struct {
 	ID          uuid.UUID       `gorm:"primaryKey;column:id"`
 	Name        string          `gorm:"type:varchar(100);column:name"`
@@ -18,10 +20,12 @@ type ProductModel struct {
 	UpdatedAt   time.Time       `gorm:"column:updated_at"`
 }
 
+// TableName specifies the custom table name for ProductModel in GORM.
 func (ProductModel) TableName() string {
 	return "products"
 }
 
+// FromDomain converts a core domain Product entity into a database ProductModel.
 func FromDomain(p *entity.Product) *ProductModel {
 	return &ProductModel{
 		ID:        p.ID,
@@ -33,6 +37,7 @@ func FromDomain(p *entity.Product) *ProductModel {
 	}
 }
 
+// ToDomain converts a database ProductModel record into a core domain Product entity.
 func (m *ProductModel) ToDomain() *entity.Product {
 	return &entity.Product{
 		ID:        m.ID,

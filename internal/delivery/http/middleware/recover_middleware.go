@@ -9,6 +9,8 @@ import (
 	"github.com/irfantrue/web-application-backend-go/internal/delivery/http/response"
 )
 
+// RecoverMiddleware creates a middleware that catches any panics during request handling.
+// It logs the stack trace and returns a graceful 500 Internal Server Error response to the client.
 func RecoverMiddleware() fiber.Handler {
 	return func(c fiber.Ctx) error {
 		defer func() {

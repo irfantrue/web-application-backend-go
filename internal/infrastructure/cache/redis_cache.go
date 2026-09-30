@@ -1,3 +1,4 @@
+// Package cache provides caching implementations using various backends like Redis.
 package cache
 
 import (
@@ -13,6 +14,7 @@ type redisCacheImpl struct {
 	client *redis.Client
 }
 
+// NewRedisCache creates a new instance of a Redis-backed CacheService.
 func NewRedisCache(client *redis.Client) port.CacheService {
 	return &redisCacheImpl{client: client}
 }

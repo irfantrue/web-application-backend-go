@@ -1,3 +1,4 @@
+// Package port defines the interfaces for the core application to interact with external systems.
 package port
 
 import (
@@ -5,6 +6,7 @@ import (
 	"time"
 )
 
+// CacheService defines the contract for caching operations.
 type CacheService interface {
 	// Set data in the cache with a Time To Live (TTL)
 	Set(ctx context.Context, key string, value any, ttl time.Duration) error

@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+// NewPostgres initializes a new PostgreSQL connection using GORM.
 func NewPostgres(cfg *config.Config) (*gorm.DB, error) {
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s TimeZone=UTC",
@@ -27,7 +28,7 @@ func NewPostgres(cfg *config.Config) (*gorm.DB, error) {
 
 	db, err := gorm.Open(postgres.Open(dsn), gormConfig)
 	if err != nil {
-		return nil, fmt.Errorf("Failed connect database: %v", err)
+		return nil, fmt.Errorf("failed connect database: %v", err)
 	}
 
 	sqlDB, err := db.DB()

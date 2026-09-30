@@ -8,6 +8,8 @@ import (
 	"github.com/irfantrue/web-application-backend-go/internal/config"
 )
 
+// CorsMiddleware creates a new Fiber CORS middleware based on the application configuration.
+// It sets allowed origins, headers, methods, and credentials dynamically.
 func CorsMiddleware(cfg *config.Config) fiber.Handler {
 	origins := cfg.App.CorsAllowedOrigins
 	allowCredentials := true

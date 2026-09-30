@@ -5,6 +5,7 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/helmet"
 )
 
+// HelmetMiddleware creates a new Fiber helmet middleware to set various HTTP security headers.
 func HelmetMiddleware() fiber.Handler {
 	return helmet.New(helmet.Config{
 		// X-XSS-Protection: Prevents the execution of malicious scripts (Cross-Site Scripting)

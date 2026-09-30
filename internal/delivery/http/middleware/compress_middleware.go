@@ -1,3 +1,4 @@
+// Package middleware provides HTTP middlewares for the Fiber application.
 package middleware
 
 import (
@@ -6,6 +7,8 @@ import (
 	"github.com/irfantrue/web-application-backend-go/internal/config"
 )
 
+// CompressMiddleware creates a new Fiber compression middleware based on the application configuration.
+// The compression level is determined by the CompressLevel value in the config.
 func CompressMiddleware(cfg *config.Config) fiber.Handler {
 	level := compress.LevelBestSpeed
 
@@ -16,8 +19,6 @@ func CompressMiddleware(cfg *config.Config) fiber.Handler {
 		level = compress.LevelBestSpeed
 	case 2:
 		level = compress.LevelBestCompression
-	default:
-		level = compress.LevelBestSpeed
 	}
 
 	return compress.New(compress.Config{

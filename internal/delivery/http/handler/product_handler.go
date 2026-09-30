@@ -1,3 +1,4 @@
+// Package handler provides HTTP request handlers for the application.
 package handler
 
 import (
@@ -10,14 +11,18 @@ import (
 	"github.com/irfantrue/web-application-backend-go/internal/pkg/validator"
 )
 
+// ProductHandler handles HTTP requests related to product operations.
 type ProductHandler struct {
 	usecase usecase.ProductUsecase
 }
 
+// NewProductHandler creates a new instance of ProductHandler with the given usecase.
 func NewProductHandler(u usecase.ProductUsecase) *ProductHandler {
 	return &ProductHandler{usecase: u}
 }
 
+// Create handles the HTTP request to create a new product.
+// It binds the request body, validates it, and passes it to the usecase layer.
 func (h *ProductHandler) Create(c fiber.Ctx) error {
 	req := new(dto.CreateProductRequest)
 
@@ -48,6 +53,24 @@ func (h *ProductHandler) Create(c fiber.Ctx) error {
 	}
 
 	return response.Write(c, &response.Response[*dto.ProductResponse]{
+		Status: http.StatusCreated,
+		Data:   productRes,
+	})
+}
+
+// FindAll handles the HTTP request to retrieve all products.
+// It fetches the product list from the usecase layer and returns it to the client.
+func (h *ProductHandler) FindAll(c fiber.Ctx) error {
+	productRes, err := h.usecase.FindAll(c.Context())
+	if err != nil {
+		return response.WriteProblem(c, &response.Problem{
+			Title:  "Failed to FindAll Product",
+			Status: http.StatusUnprocessableEntity,
+			Detail: err.Error(),
+		})
+	}
+
+	return response.Write(c, &response.Response[[]dto.ProductResponse]{
 		Status: http.StatusCreated,
 		Data:   productRes,
 	})

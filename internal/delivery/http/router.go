@@ -1,3 +1,4 @@
+// Package http provides HTTP delivery components including route setup and fiber instance initialization.
 package http
 
 import (
@@ -7,13 +8,14 @@ import (
 	"github.com/irfantrue/web-application-backend-go/internal/delivery/http/middleware"
 )
 
+// Config holds the dependencies required to set up HTTP routes.
 type Config struct {
 	App            *fiber.App
 	Config         *config.Config
-	HealthHandler  *handler.HealthHandler
 	ProductHandler *handler.ProductHandler
 }
 
+// NewSetupRoutes configures the global middlewares and registers all API endpoints.
 func NewSetupRoutes(cfg *Config) {
 	// 1. RECOVER (Must always be number 1 to catch panics)
 	cfg.App.Use(middleware.RecoverMiddleware())
@@ -27,8 +29,6 @@ func NewSetupRoutes(cfg *Config) {
 	// 4. Other Global Middleware (Compression and Timezone)
 	cfg.App.Use(middleware.CompressMiddleware(cfg.Config))
 	cfg.App.Use(middleware.TimezoneMiddleware("Asia/Jakarta"))
-
-	cfg.App.Get("/health", cfg.HealthHandler.Get)
 
 	v1 := cfg.App.Group("/api/v1")
 

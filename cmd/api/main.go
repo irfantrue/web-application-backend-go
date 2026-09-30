@@ -1,3 +1,4 @@
+// Package main is the entry point of the application.
 package main
 
 import (
@@ -28,19 +29,32 @@ func main() {
 		log.Fatalf("Database error: %v", err)
 	}
 
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatalf("Failed to get sql.DB: %v", err)
+	}
+	defer func() {
+		log.Println("Closing Postgres connection...")
+		if err := sqlDB.Close(); err != nil {
+			log.Printf("Failed to close database: %v\n", err)
+		}
+	}()
+
 	redisClient, err := database.NewRedisClient(cfg)
 	if err != nil {
-		log.Fatalf("Redis error: %v", err)
+		log.Printf("Redis error: %v", err)
 	}
-	defer redisClient.Close()
+
+	defer func() {
+		if err := redisClient.Close(); err != nil {
+			log.Printf("Failed to close Redis client: %v\n", err)
+		}
+	}()
 
 	uow := database.NewGormUnitOfWork(db)
 	productRepository := repository.NewProductRepository(db)
 
 	_ = cache.NewRedisCache(redisClient)
-
-	healthUsecase := usecase.NewHealthUsecase()
-	healthHandler := handler.NewHealthHandler(healthUsecase)
 
 	productUsecase := usecase.NewProductUsecase(uow, productRepository)
 	productHandler := handler.NewProductHandler(productUsecase)
@@ -50,7 +64,6 @@ func main() {
 	setupRoutes := &deliveryHttp.Config{
 		App:            app,
 		Config:         cfg,
-		HealthHandler:  healthHandler,
 		ProductHandler: productHandler,
 	}
 
@@ -73,7 +86,7 @@ func main() {
 	defer cancel()
 
 	if err := app.ShutdownWithContext(ctx); err != nil {
-		log.Fatalf("Fiber shutdown failed.")
+		log.Printf("Fiber shutdown failed.")
 	}
 
 	// Close other external connections sequentially.

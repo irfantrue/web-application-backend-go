@@ -1,3 +1,4 @@
+// Package validator provides utility functions to validate structs using go-playground/validator.
 package validator
 
 import (
@@ -23,6 +24,8 @@ func init() {
 	})
 }
 
+// ValidateStruct validates the fields of a struct based on its validator tags.
+// It returns a slice of InvalidParam if validation fails, or nil if successful.
 func ValidateStruct(data any) []response.InvalidParam {
 	err := validate.Struct(data)
 	if err == nil {
@@ -45,6 +48,8 @@ func getErrorMessage(err validator.FieldError) string {
 	switch err.Tag() {
 	case "required":
 		return "This field is mandatory."
+	case "min":
+		return fmt.Sprintf("Must be at least %s characters long.", err.Param())
 	}
 
 	return fmt.Sprintf("Failed validation: %s", err.Tag())

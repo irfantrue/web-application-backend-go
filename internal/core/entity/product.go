@@ -1,3 +1,4 @@
+// Package entity contains the core business domain models and logic.
 package entity
 
 import (
@@ -8,6 +9,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// Product represents an item available for sale in the system.
 type Product struct {
 	ID        uuid.UUID
 	Name      string
@@ -17,13 +19,15 @@ type Product struct {
 	UpdatedAt time.Time
 }
 
+// NewProduct creates a new Product instance with validation and default values.
+// It returns an error if the price or stock is negative.
 func NewProduct(name string, price decimal.Decimal, stock int) (*Product, error) {
 	if price.IsNegative() {
-		return nil, errors.New("The price cannot be negative.")
+		return nil, errors.New("the price cannot be negative")
 	}
 
 	if stock < 0 {
-		return nil, errors.New("The stock cannot be negative.")
+		return nil, errors.New("the stock cannot be negative")
 	}
 
 	now := time.Now()

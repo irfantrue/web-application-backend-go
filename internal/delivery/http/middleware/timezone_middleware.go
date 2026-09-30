@@ -7,6 +7,8 @@ import (
 	"github.com/irfantrue/web-application-backend-go/internal/pkg/ctxval"
 )
 
+// TimezoneMiddleware creates a middleware that parses the "X-Timezone" header.
+// It sets the parsed timezone (or the default timezone if invalid/missing) into the request context.
 func TimezoneMiddleware(defaultTimezone string) fiber.Handler {
 	defaultLoc, err := time.LoadLocation(defaultTimezone)
 	if err != nil {

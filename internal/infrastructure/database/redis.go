@@ -9,6 +9,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+// NewRedisClient creates and initializes a new Redis client using the provided configuration.
+// It also pings the Redis server to ensure a successful connection before returning the client.
 func NewRedisClient(cfg *config.Config) (*redis.Client, error) {
 	addr := fmt.Sprintf("%s:%s", cfg.Redis.Host, cfg.Redis.Port)
 
@@ -19,7 +21,7 @@ func NewRedisClient(cfg *config.Config) (*redis.Client, error) {
 	})
 
 	if err := client.Ping(context.Background()).Err(); err != nil {
-		return nil, fmt.Errorf("Failed to connect to Redis: %v", err)
+		return nil, fmt.Errorf("failed to connect to Redis: %v", err)
 	}
 
 	log.Println("Successfully connected to the Redis database.")
