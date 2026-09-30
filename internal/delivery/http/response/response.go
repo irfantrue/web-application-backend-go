@@ -4,6 +4,7 @@ package response
 import (
 	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -66,4 +67,13 @@ func Write[T any](c fiber.Ctx, r *Response[T]) error {
 	c.Set(fiber.HeaderContentType, ContentType)
 	res := *r
 	return WriteJSON(c, res.Status, res)
+}
+
+// UnauthorizedResponse returns a standard RFC 7807 problem detail response for unauthorized access (401).
+func UnauthorizedResponse(c fiber.Ctx, detail string) error {
+	return WriteProblem(c, &Problem{
+		Title:  "Unauthorized Access",
+		Status: http.StatusUnauthorized,
+		Detail: detail,
+	})
 }

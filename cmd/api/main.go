@@ -16,6 +16,7 @@ import (
 	"github.com/irfantrue/web-application-backend-go/internal/infrastructure/cache"
 	"github.com/irfantrue/web-application-backend-go/internal/infrastructure/database"
 	"github.com/irfantrue/web-application-backend-go/internal/infrastructure/repository"
+	"github.com/irfantrue/web-application-backend-go/internal/infrastructure/security"
 )
 
 func main() {
@@ -59,10 +60,13 @@ func main() {
 	productUsecase := usecase.NewProductUsecase(uow, productRepository)
 	productHandler := handler.NewProductHandler(productUsecase)
 
+	tokenService := security.NewJwtService(cfg)
+
 	app := deliveryHttp.NewFiber(cfg)
 
 	setupRoutes := &deliveryHttp.Config{
 		App:            app,
+		TokenService:   tokenService,
 		Config:         cfg,
 		ProductHandler: productHandler,
 	}

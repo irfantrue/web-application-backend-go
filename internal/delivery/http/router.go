@@ -4,6 +4,7 @@ package http
 import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/irfantrue/web-application-backend-go/internal/config"
+	"github.com/irfantrue/web-application-backend-go/internal/core/port"
 	"github.com/irfantrue/web-application-backend-go/internal/delivery/http/handler"
 	"github.com/irfantrue/web-application-backend-go/internal/delivery/http/middleware"
 )
@@ -11,6 +12,7 @@ import (
 // Config holds the dependencies required to set up HTTP routes.
 type Config struct {
 	App            *fiber.App
+	TokenService   port.TokenService
 	Config         *config.Config
 	ProductHandler *handler.ProductHandler
 }
@@ -32,7 +34,10 @@ func NewSetupRoutes(cfg *Config) {
 
 	v1 := cfg.App.Group("/api/v1")
 
-	products := v1.Group("/products")
+	protected := v1.Group("/")
+	protected.Use(middleware.JwtMiddleware(cfg.TokenService))
+
+	products := protected.Group("/products")
 	{
 		products.Post("/", cfg.ProductHandler.Create)
 	}

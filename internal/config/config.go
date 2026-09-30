@@ -20,6 +20,8 @@ type AppConfig struct {
 	Env                string `mapstructure:"APP_ENV"`
 	CompressLevel      int    `mapstructure:"COMPRESS_LEVEL"`
 	CorsAllowedOrigins string `mapstructure:"CORS_ALLOWED_ORIGINS"`
+	JwtSecret          string `mapstructure:"JWT_SECRET"`
+	JwtExpire          int    `mapstructure:"JWT_EXPIRE_HOURS"`
 }
 
 // DBConfig holds the credentials and connection settings for the database.
