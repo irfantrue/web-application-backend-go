@@ -15,11 +15,18 @@ type Response[T any] struct {
 	Data   T   `json:"data,omitempty"`
 }
 
+// InvalidParam merepresentasikan detail error validasi per kolom
+type InvalidParam struct {
+	Name   string `json:"name"`
+	Reason string `json:"reason"`
+}
+
 // Problem is the root RFC 7807 problem detail object.
 type Problem struct {
-	Title  string `json:"title"`
-	Status int    `json:"status"`
-	Detail string `json:"detail,omitempty"`
+	Title         string         `json:"title"`
+	Status        int            `json:"status"`
+	Detail        string         `json:"detail,omitempty"`
+	InvalidParams []InvalidParam `json:"invalid_params,omitempty"`
 }
 
 func (p *Problem) Error() string {

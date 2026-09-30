@@ -12,6 +12,9 @@ import (
 	"github.com/irfantrue/web-application-backend-go/internal/config"
 	deliveryHttp "github.com/irfantrue/web-application-backend-go/internal/delivery/http"
 	"github.com/irfantrue/web-application-backend-go/internal/delivery/http/handler"
+	"github.com/irfantrue/web-application-backend-go/internal/infrastructure/cache"
+	"github.com/irfantrue/web-application-backend-go/internal/infrastructure/database"
+	"github.com/irfantrue/web-application-backend-go/internal/infrastructure/repository"
 )
 
 func main() {
@@ -20,17 +23,38 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	app := deliveryHttp.NewFiber(cfg)
+	db, err := database.NewPostgres(cfg)
+	if err != nil {
+		log.Fatalf("Database error: %v", err)
+	}
+
+	redisClient, err := database.NewRedisClient(cfg)
+	if err != nil {
+		log.Fatalf("Redis error: %v", err)
+	}
+	defer redisClient.Close()
+
+	uow := database.NewGormUnitOfWork(db)
+	productRepository := repository.NewProductRepository(db)
+
+	_ = cache.NewRedisCache(redisClient)
 
 	healthUsecase := usecase.NewHealthUsecase()
 	healthHandler := handler.NewHealthHandler(healthUsecase)
 
-	setupRoutes := &deliveryHttp.SetupRoutes{
-		App:           app,
-		HealthHandler: healthHandler,
+	productUsecase := usecase.NewProductUsecase(uow, productRepository)
+	productHandler := handler.NewProductHandler(productUsecase)
+
+	app := deliveryHttp.NewFiber(cfg)
+
+	setupRoutes := &deliveryHttp.Config{
+		App:            app,
+		Config:         cfg,
+		HealthHandler:  healthHandler,
+		ProductHandler: productHandler,
 	}
 
-	setupRoutes.Build()
+	deliveryHttp.NewSetupRoutes(setupRoutes)
 
 	go func() {
 		log.Printf("Server is running on port %s", cfg.App.Port)
