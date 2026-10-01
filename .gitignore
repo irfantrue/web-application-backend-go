@@ -29,6 +29,7 @@ go.work.sum
 
 # build
 bin
+air
 
 # Editor/IDE
 # .idea/
