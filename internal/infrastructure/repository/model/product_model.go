@@ -25,8 +25,8 @@ func (ProductModel) TableName() string {
 	return "products"
 }
 
-// FromDomain converts a core domain Product entity into a database ProductModel.
-func FromDomain(p *entity.Product) *ProductModel {
+// NewProductModel converts a core domain Product entity into a database ProductModel.
+func NewProductModel(p *entity.Product) *ProductModel {
 	return &ProductModel{
 		ID:        p.ID,
 		Name:      p.Name,

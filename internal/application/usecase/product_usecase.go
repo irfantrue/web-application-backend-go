@@ -4,8 +4,10 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
 	"github.com/irfantrue/web-application-backend-go/internal/application/dto"
 	"github.com/irfantrue/web-application-backend-go/internal/core/entity"
@@ -25,6 +27,7 @@ type productUsecase struct {
 	uow         port.UnitOfWork
 	productRepo port.ProductRepository
 	cache       port.CacheService
+	broker      port.MessageBroker
 }
 
 // NewProductUsecase creates a new instance of ProductUsecase.
@@ -58,6 +61,27 @@ func (u *productUsecase) Create(ctx context.Context, req dto.CreateProductReques
 	if err != nil {
 		return nil, fmt.Errorf("failed to save product: %w", err)
 	}
+
+	eventData := map[string]any{
+		"event":      "product_created",
+		"product_id": product.ID.String(),
+		"timestamp":  time.Now(),
+	}
+
+	eventBytes, err := sonic.Marshal(eventData)
+	if err != nil {
+		return nil, fmt.Errorf("failed marshaling event data product: %v", err)
+	}
+
+	go func() {
+		bgCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+
+		err := u.broker.Publish(bgCtx, "", "notification.queue", eventBytes)
+		if err != nil {
+			log.Printf("Failed to publish product_created event: %v", err)
+		}
+	}()
 
 	userLoc := ctxval.GetTimezone(ctx)
 

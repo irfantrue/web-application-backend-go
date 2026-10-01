@@ -1,5 +1,5 @@
 root = "."
-tmp_dir = ".air"
+tmp_dir = "air"
 
 # ============================================================================
 # BUILD
@@ -49,17 +49,17 @@ include_file = [".env", ".env.local", "config.*.toml"]
 
 # Direktori yang diabaikan
 exclude_dir = [
-	"vendor",
-	"bin",
-	".air",
-	".git",
-	"testdata",
-	"docs",
-	"scripts",
-	"assets",
-	"static",
-	"node_modules",
-	"tmp",
+  "vendor",
+  "bin",
+  ".air",
+  ".git",
+  "testdata",
+  "docs",
+  "scripts",
+  "assets",
+  "static",
+  "node_modules",
+  "tmp",
 ]
 
 # File spesifik yang diabaikan
@@ -67,11 +67,11 @@ exclude_file = []
 
 # Regex pattern file yang diabaikan
 exclude_regex = [
-	"_test\\.go",
-	"\\.pb\\.go",   # protobuf generated
-	"\\.gen\\.go",  # generated files
-	"mock_.*\\.go", # mock files
-	".*_mock\\.go",
+  "_test\\.go",
+  "\\.pb\\.go", # protobuf generated
+  "\\.gen\\.go", # generated files
+  "mock_.*\\.go", # mock files
+  ".*_mock\\.go",
 ]
 
 # Abaikan file yang tidak berubah (berdasarkan checksum)

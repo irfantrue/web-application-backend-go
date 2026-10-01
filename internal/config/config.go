@@ -7,9 +7,10 @@ import (
 
 // Config is the main structure that combines all application configurations (App, DB, and Redis).
 type Config struct {
-	App   AppConfig   `mapstructure:",squash"`
-	DB    DBConfig    `mapstructure:",squash"`
-	Redis RedisConfig `mapstructure:",squash"`
+	App      AppConfig      `mapstructure:",squash"`
+	DB       DBConfig       `mapstructure:",squash"`
+	RabbitMQ RabbitMQConfig `mapstructure:",squash"`
+	Redis    RedisConfig    `mapstructure:",squash"`
 }
 
 // AppConfig holds specific application settings such as port, environment, and CORS.
@@ -31,6 +32,11 @@ type DBConfig struct {
 	Password string `mapstructure:"DB_PASSWORD"`
 	Name     string `mapstructure:"DB_NAME"`
 	Port     string `mapstructure:"DB_PORT"`
+}
+
+// RabbitMQConfig holds the configuration settings for connecting to RabbitMQ.
+type RabbitMQConfig struct {
+	URL string `mapstructure:"RABBITMQ_URL"`
 }
 
 // RedisConfig holds the credentials and connection settings for Redis.

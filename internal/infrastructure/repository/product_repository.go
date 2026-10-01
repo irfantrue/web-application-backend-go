@@ -25,7 +25,7 @@ func NewProductRepository(db *gorm.DB) port.ProductRepository {
 // Create implements [port.ProductRepository].
 func (r *productRepository) Create(ctx context.Context, product *entity.Product) error {
 	db := database.ExtractTx(ctx, r.db)
-	dbModel := model.FromDomain(product)
+	dbModel := model.NewProductModel(product)
 
 	return db.WithContext(ctx).Create(dbModel).Error
 }

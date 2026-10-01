@@ -13,6 +13,8 @@ import (
 	"github.com/irfantrue/web-application-backend-go/internal/config"
 	deliveryHttp "github.com/irfantrue/web-application-backend-go/internal/delivery/http"
 	"github.com/irfantrue/web-application-backend-go/internal/delivery/http/handler"
+	"github.com/irfantrue/web-application-backend-go/internal/delivery/worker"
+	"github.com/irfantrue/web-application-backend-go/internal/infrastructure/broker"
 	"github.com/irfantrue/web-application-backend-go/internal/infrastructure/cache"
 	"github.com/irfantrue/web-application-backend-go/internal/infrastructure/database"
 	"github.com/irfantrue/web-application-backend-go/internal/infrastructure/repository"
@@ -20,19 +22,28 @@ import (
 )
 
 func main() {
+	ctx, stop := signal.NotifyContext(
+		context.Background(),
+		os.Interrupt,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+	)
+	defer stop()
+
 	cfg, err := config.LoadConfig(".env")
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+		log.Printf("Failed to load config: %v", err)
 	}
 
+	// Database
 	db, err := database.NewPostgres(cfg)
 	if err != nil {
-		log.Fatalf("Database error: %v", err)
+		log.Printf("Database error: %v", err)
 	}
 
 	sqlDB, err := db.DB()
 	if err != nil {
-		log.Fatalf("Failed to get sql.DB: %v", err)
+		log.Printf("Failed to get sql.DB: %v", err)
 	}
 	defer func() {
 		log.Println("Closing Postgres connection...")
@@ -41,6 +52,7 @@ func main() {
 		}
 	}()
 
+	// Redis (optional — failure is not critical)
 	redisClient, err := database.NewRedisClient(cfg)
 	if err != nil {
 		log.Printf("Redis error: %v", err)
@@ -52,27 +64,39 @@ func main() {
 		}
 	}()
 
+	// RabbitMQ
+	broker, err := broker.NewRabbitMQ(cfg)
+	if err != nil {
+		log.Printf("Failed to initialize RabbitMQ: %v", err)
+	}
+
+	defer func() {
+		if err := broker.Close(); err != nil {
+			log.Printf("Failed to close RabbitMQ: %v", err)
+		}
+	}()
+
+	// Worker — non-blocking,
+	go worker.StartNotificationWorker(ctx, broker)
+
+	// Dependency wiring
 	uow := database.NewGormUnitOfWork(db)
 	productRepository := repository.NewProductRepository(db)
-
 	cacheService := cache.NewRedisCache(redisClient)
-
 	productUsecase := usecase.NewProductUsecase(uow, productRepository, cacheService)
 	productHandler := handler.NewProductHandler(productUsecase)
-
 	tokenService := security.NewJwtService(cfg)
 
 	app := deliveryHttp.NewFiber(cfg)
-
 	setupRoutes := &deliveryHttp.Config{
 		App:            app,
 		TokenService:   tokenService,
 		Config:         cfg,
 		ProductHandler: productHandler,
 	}
-
 	deliveryHttp.NewSetupRoutes(setupRoutes)
 
+	// HTTP server — non-blocking
 	go func() {
 		log.Printf("Server is running on port %s", cfg.App.Port)
 		if err := app.Listen(":" + cfg.App.Port); err != nil {
@@ -80,16 +104,15 @@ func main() {
 		}
 	}()
 
-	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
-
-	<-shutdown
+	// Wait for ctx to be cancelled (SIGINT/SIGTERM)
+	<-ctx.Done()
 	log.Println("Received termination signal. Initiating graceful shutdown...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// Graceful HTTP shutdown (allow time to drain active requests)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	if err := app.ShutdownWithContext(ctx); err != nil {
+	if err := app.ShutdownWithContext(shutdownCtx); err != nil {
 		log.Printf("Fiber shutdown failed.")
 	}
 
