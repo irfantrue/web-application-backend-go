@@ -4,7 +4,9 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/irfantrue/web-application-backend-go/internal/application/dto"
 	"github.com/irfantrue/web-application-backend-go/internal/core/entity"
 	"github.com/irfantrue/web-application-backend-go/internal/core/port"
@@ -16,18 +18,25 @@ import (
 type ProductUsecase interface {
 	Create(ctx context.Context, req dto.CreateProductRequest) (*dto.ProductResponse, error)
 	FindAll(ctx context.Context) ([]dto.ProductResponse, error)
+	FindByID(ctx context.Context, id string) (*dto.ProductResponse, error)
 }
 
 type productUsecase struct {
 	uow         port.UnitOfWork
 	productRepo port.ProductRepository
+	cache       port.CacheService
 }
 
 // NewProductUsecase creates a new instance of ProductUsecase.
-func NewProductUsecase(uow port.UnitOfWork, productRepo port.ProductRepository) ProductUsecase {
+func NewProductUsecase(
+	uow port.UnitOfWork,
+	productRepo port.ProductRepository,
+	cache port.CacheService,
+) ProductUsecase {
 	return &productUsecase{
 		uow:         uow,
 		productRepo: productRepo,
+		cache:       cache,
 	}
 }
 
@@ -55,6 +64,7 @@ func (u *productUsecase) Create(ctx context.Context, req dto.CreateProductReques
 	return dto.NewProductResponse(product, userLoc), nil
 }
 
+// FindAll implements [ProductUsecase].
 func (u *productUsecase) FindAll(ctx context.Context) ([]dto.ProductResponse, error) {
 	products, err := u.productRepo.FindAll(ctx)
 	if err != nil {
@@ -64,4 +74,29 @@ func (u *productUsecase) FindAll(ctx context.Context) ([]dto.ProductResponse, er
 	userLoc := ctxval.GetTimezone(ctx)
 
 	return dto.NewProductResponseList(products, userLoc), nil
+}
+
+// FindByID implements [ProductUsecase].
+func (u *productUsecase) FindByID(ctx context.Context, id string) (*dto.ProductResponse, error) {
+	productID, err := uuid.Parse(id)
+	if err != nil {
+		return nil, fmt.Errorf("failed parse productID: %w", err)
+	}
+
+	cacheKey := "product:" + productID.String()
+	userLoc := ctxval.GetTimezone(ctx)
+
+	var cached entity.Product
+	if err := u.cache.Get(ctx, cacheKey, &cached); err == nil {
+		return dto.NewProductResponse(&cached, userLoc), nil
+	}
+
+	product, err := u.productRepo.FindByID(ctx, productID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve products: %w", err)
+	}
+
+	_ = u.cache.Set(ctx, cacheKey, product, 5*time.Minute)
+
+	return dto.NewProductResponse(product, userLoc), nil
 }

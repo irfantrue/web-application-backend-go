@@ -75,3 +75,21 @@ func (h *ProductHandler) FindAll(c fiber.Ctx) error {
 		Data:   productRes,
 	})
 }
+
+// FindByID handles the HTTP request to retrieves product.
+// It fetches the product from the usecase layer and returns it to the client.
+func (h *ProductHandler) FindByID(c fiber.Ctx) error {
+	productRes, err := h.usecase.FindByID(c.Context(), c.Params("id"))
+	if err != nil {
+		return response.WriteProblem(c, &response.Problem{
+			Title:  "Failed to FindByID Product",
+			Status: http.StatusUnprocessableEntity,
+			Detail: err.Error(),
+		})
+	}
+
+	return response.Write(c, &response.Response[*dto.ProductResponse]{
+		Status: http.StatusCreated,
+		Data:   productRes,
+	})
+}

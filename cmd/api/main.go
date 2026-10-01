@@ -55,9 +55,9 @@ func main() {
 	uow := database.NewGormUnitOfWork(db)
 	productRepository := repository.NewProductRepository(db)
 
-	_ = cache.NewRedisCache(redisClient)
+	cacheService := cache.NewRedisCache(redisClient)
 
-	productUsecase := usecase.NewProductUsecase(uow, productRepository)
+	productUsecase := usecase.NewProductUsecase(uow, productRepository, cacheService)
 	productHandler := handler.NewProductHandler(productUsecase)
 
 	tokenService := security.NewJwtService(cfg)

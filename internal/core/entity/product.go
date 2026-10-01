@@ -22,12 +22,16 @@ type Product struct {
 // NewProduct creates a new Product instance with validation and default values.
 // It returns an error if the price or stock is negative.
 func NewProduct(name string, price decimal.Decimal, stock int) (*Product, error) {
+	if name == "" {
+		return nil, errors.New("name cannot be empty")
+	}
+
 	if price.IsNegative() {
-		return nil, errors.New("the price cannot be negative")
+		return nil, errors.New("price cannot be negative")
 	}
 
 	if stock < 0 {
-		return nil, errors.New("the stock cannot be negative")
+		return nil, errors.New("stock cannot be negative")
 	}
 
 	now := time.Now()
