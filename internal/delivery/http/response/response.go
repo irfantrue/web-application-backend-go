@@ -77,3 +77,22 @@ func UnauthorizedResponse(c fiber.Ctx, detail string) error {
 		Detail: detail,
 	})
 }
+
+// BadRequestResponse returns a standard RFC 7807 problem detail response for bad request access (400).
+func BadRequestResponse(c fiber.Ctx, title, detail string, invalidParams []InvalidParam) error {
+	return WriteProblem(c, &Problem{
+		Title:         title,
+		Status:        http.StatusBadRequest,
+		Detail:        detail,
+		InvalidParams: invalidParams,
+	})
+}
+
+// UnprocessableEntityResponse returns a standard RFC 7807 problem detail response for unprocessable entity access (422).
+func UnprocessableEntityResponse(c fiber.Ctx, title string, detail string) error {
+	return WriteProblem(c, &Problem{
+		Title:  title,
+		Status: http.StatusUnprocessableEntity,
+		Detail: detail,
+	})
+}

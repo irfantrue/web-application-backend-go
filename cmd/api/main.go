@@ -19,6 +19,7 @@ import (
 	"github.com/irfantrue/web-application-backend-go/internal/infrastructure/database"
 	"github.com/irfantrue/web-application-backend-go/internal/infrastructure/repository"
 	"github.com/irfantrue/web-application-backend-go/internal/infrastructure/security"
+	cryptoService "github.com/irfantrue/web-application-backend-go/internal/pkg/crypto"
 )
 
 func main() {
@@ -81,18 +82,29 @@ func main() {
 
 	// Dependency wiring
 	uow := database.NewGormUnitOfWork(db)
-	productRepository := repository.NewProductRepository(db)
-	cacheService := cache.NewRedisCache(redisClient)
-	productUsecase := usecase.NewProductUsecase(uow, productRepository, cacheService)
-	productHandler := handler.NewProductHandler(productUsecase)
+
+	cryptoService := cryptoService.NewCryptographyService()
 	tokenService := security.NewJwtService(cfg)
+	cacheService := cache.NewRedisCache(redisClient)
+
+	apiKeyRepository := repository.NewAPIKeyRepository(db)
+	userRepository := repository.NewUserRepository(db)
+	refreshTokenSessionRepository := repository.NewRefreshTokenSessionRepository(db)
+
+	apiKeyUsecase := usecase.NewAPIKeyUsecase(uow, apiKeyRepository, cacheService, cryptoService)
+	authUsecase := usecase.NewAuthUsecase(uow, userRepository, refreshTokenSessionRepository, cryptoService, tokenService, broker)
+
+	apiKeyHandler := handler.NewAPIKeyHandler(apiKeyUsecase)
+	authHandler := handler.NewAuthHandler(authUsecase)
 
 	app := deliveryHttp.NewFiber(cfg)
 	setupRoutes := &deliveryHttp.Config{
-		App:            app,
-		TokenService:   tokenService,
-		Config:         cfg,
-		ProductHandler: productHandler,
+		App:           app,
+		TokenService:  tokenService,
+		APIKeyService: apiKeyUsecase,
+		Config:        cfg,
+		APIKeyHandler: apiKeyHandler,
+		AuthHandler:   authHandler,
 	}
 	deliveryHttp.NewSetupRoutes(setupRoutes)
 

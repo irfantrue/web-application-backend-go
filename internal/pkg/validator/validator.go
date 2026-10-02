@@ -32,9 +32,19 @@ func ValidateStruct(data any) []response.InvalidParam {
 		return nil
 	}
 
-	var errors []response.InvalidParam
+	// Safely assert the error type to avoid panics on InvalidValidationError.
+	validationErrs, ok := err.(validator.ValidationErrors)
+	if !ok {
+		return []response.InvalidParam{
+			{
+				Name:   "payload",
+				Reason: "Invalid request payload structure.",
+			},
+		}
+	}
 
-	for _, err := range err.(validator.ValidationErrors) {
+	var errors []response.InvalidParam
+	for _, err := range validationErrs {
 		errors = append(errors, response.InvalidParam{
 			Name:   err.Field(),
 			Reason: getErrorMessage(err),
@@ -48,8 +58,12 @@ func getErrorMessage(err validator.FieldError) string {
 	switch err.Tag() {
 	case "required":
 		return "This field is mandatory."
+	case "email":
+		return "Must be a valid email address."
 	case "min":
 		return fmt.Sprintf("Must be at least %s characters long.", err.Param())
+	case "max":
+		return fmt.Sprintf("Must be at most %s characters long.", err.Param())
 	}
 
 	return fmt.Sprintf("Failed validation: %s", err.Tag())

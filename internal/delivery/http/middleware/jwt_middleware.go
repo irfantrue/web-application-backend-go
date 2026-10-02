@@ -24,12 +24,12 @@ func JwtMiddleware(tokenService port.TokenService) fiber.Handler {
 		}
 		tokenString := parts[1]
 
-		userID, err := tokenService.ValidateToken(tokenString)
+		tokenPayload, err := tokenService.ValidateToken(tokenString)
 		if err != nil {
 			return response.UnauthorizedResponse(c, err.Error())
 		}
 
-		newCtx := ctxval.SetUserID(c, userID)
+		newCtx := ctxval.SetUserID(c, tokenPayload.UserID)
 		c.SetContext(newCtx)
 
 		return c.Next()
