@@ -15,7 +15,7 @@ import (
 func StartNotificationWorker(ctx context.Context, broker port.MessageBroker) {
 	timeout := 10 * time.Second
 
-	err := broker.Consume(ctx, "notification.queue", func(ctx context.Context, body []byte) error {
+	err := broker.Consume(ctx, "notification.reset_password", func(ctx context.Context, body []byte) error {
 		data := map[string]any{}
 		if err := sonic.Unmarshal(body, &data); err != nil {
 			return fmt.Errorf("unmarshal failed: %w", err)

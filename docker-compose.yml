@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  api:
+    image: spiffingworld/my-go-api:v1.0.0   # Replace with your registry and use a pinned tag (e.g., v1.2.3 or git SHA)
+    build: .
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    networks:
+      - app_network
+    # healthcheck:
+    #   test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+    #   interval: 10s
+    #   timeout: 3s
+    #   retries: 3
+    #   start_period: 5s
+    stop_grace_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      mode: replicated
+      replicas: 3   # Run 3 API instances (load-balanced by Swarm)
+      update_config:
+        parallelism: 1        # Update 1 container at a time (zero-downtime)
+        delay: 10s            # Pause between container updates
+        order: start-first    # Start new container before stopping the old one
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        delay: 5s
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M        # Prevent the API from monopolizing server RAM
+
+networks:
+  app_network:
+    driver: overlay            # Overlay is required for Swarm

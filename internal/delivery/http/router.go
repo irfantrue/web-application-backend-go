@@ -35,6 +35,10 @@ func NewSetupRoutes(cfg *Config) {
 	cfg.App.Use(middleware.CompressMiddleware(cfg.Config))
 	cfg.App.Use(middleware.TimezoneMiddleware("Asia/Jakarta"))
 
+	cfg.App.Get("/healthz", func(c fiber.Ctx) error {
+		return c.JSON(fiber.Map{"message": "active"})
+	})
+
 	v1 := cfg.App.Group("/api/v1")
 
 	protectedAPIKey := v1.Group("/")

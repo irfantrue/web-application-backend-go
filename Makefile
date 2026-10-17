@@ -3,9 +3,12 @@ AIR_DIR := air
 AIR_PATH := $(AIR_DIR)/$(APP_NAME)
 CMD_PATH := ./cmd/api/
 
-.PHONY: all build run watch tidy lint test test-coverage migrate-up migrate-down clean
+.PHONY: all help run-% build run watch tidy lint test test-coverage clean
 
 all: tidy lint test build
+
+run-%:
+	cd services/$* && go run ./cmd/api
 
 tidy:
 	go mod tidy
@@ -21,7 +24,7 @@ build-air:
 
 build:
 	@mkdir -p bin
-	go build -o bin/$(APP_NAME) $(CMD_PATH)
+	go build -mod=vendor -o bin/$(APP_NAME) $(CMD_PATH)
 	@echo "Successfully built bin/$(APP_NAME)"
 
 lint:

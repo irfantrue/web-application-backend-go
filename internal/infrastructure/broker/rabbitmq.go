@@ -90,7 +90,7 @@ func declareTopology(ch *amqp.Channel) error {
 		"x-dead-letter-routing-key": "dlx.routingKey",
 	}
 
-	if _, err := ch.QueueDeclare("notification.queue", true, false, false, false, args); err != nil {
+	if _, err := ch.QueueDeclare("notification.reset_password", true, false, false, false, args); err != nil {
 		return fmt.Errorf("failed to declare notification queue: %w", err)
 	}
 
